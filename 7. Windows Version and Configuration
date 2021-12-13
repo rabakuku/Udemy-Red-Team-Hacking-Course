@@ -1,0 +1,17 @@
+#Windows Version and Configuration
+systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
+
+#Extract patchs and updates
+wmic qfe
+
+#Architecture
+wmic os get osarchitecture || echo %PROCESSOR_ARCHITECTURE%
+
+#List all env variables
+set
+Get-ChildItem Env: | ft Key,Value
+
+#List all drives
+wmic logicaldisk get caption || fsutil fsinfo drives
+wmic logicaldisk get caption,description,providername
+Get-PSDrive | where {$_.Provider -like "Microsoft.PowerShell.Core\FileSystem"}| ft Name,Root
